@@ -23,12 +23,39 @@ npm run dev
 
 Open `http://localhost:5173`. The API runs at `http://localhost:5000`.
 
+### Environment variables
+
+- `PORT`: API port, default `5000`.
+- `CLIENT_URL`: frontend origin allowed by CORS, normally `http://localhost:5173`.
+- `MONGODB_URI`: MongoDB Atlas or replica-set connection string. Transactions require a replica set.
+- `JWT_SECRET`: long random secret used to sign authentication tokens. Do not commit `.env`.
+
+For separate terminals instead of `npm run dev`:
+
+```bash
+# Terminal 1
+npm run server:dev
+
+# Terminal 2
+npm run client:dev
+```
+
 For a production frontend build:
 
 ```bash
 npm run build
 npm start
 ```
+
+### Deployment
+
+1. Create a MongoDB Atlas cluster with replica-set transactions enabled.
+2. Deploy the repository to a Node.js host and set `MONGODB_URI`, `JWT_SECRET`, `PORT`, and the public frontend origin in `CLIENT_URL`.
+3. Install dependencies with `npm install` and `npm install --prefix client`.
+4. Build the frontend with `npm run build`.
+5. Start the API with `npm start`. Serve the generated `client/dist` through a static host or reverse proxy and point `VITE_API_URL` at the deployed API during the client build when frontend and API use different origins.
+
+Never expose `JWT_SECRET` or commit `.env` to the repository.
 
 ## Reward rules
 
