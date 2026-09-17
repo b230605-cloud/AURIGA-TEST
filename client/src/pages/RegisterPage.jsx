@@ -26,7 +26,7 @@ export default function RegisterPage({ onLogin }) {
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError('🔐 Passwords do not match');
       return;
     }
 
@@ -53,38 +53,41 @@ export default function RegisterPage({ onLogin }) {
 
   return (
     <main>
-      <div className="container" style={{ maxWidth: '500px' }}>
-        <h1>Create Account</h1>
+      <div className="container" style={{ maxWidth: '520px', marginTop: '3rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <h1 style={{ fontSize: '2.2rem', marginBottom: '0.5rem' }}>☕ Join the Club</h1>
+          <p style={{ color: 'var(--text-light)', fontSize: '1.1rem' }}>Start earning rewards today</p>
+        </div>
 
-        {error && <div className="error">{error}</div>}
+        {error && <div className="error">⚠️ {error}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Full Name</label>
+            <label>✨ Full Name</label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
               required
-              placeholder="John Doe"
+              placeholder="Enter your name"
             />
           </div>
 
           <div className="form-group">
-            <label>Email</label>
+            <label>📧 Email Address</label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               required
-              placeholder="john@example.com"
+              placeholder="your.email@example.com"
             />
           </div>
 
           <div className="form-group">
-            <label>Phone Number</label>
+            <label>📱 Phone Number</label>
             <input
               type="tel"
               name="phoneNumber"
@@ -96,37 +99,38 @@ export default function RegisterPage({ onLogin }) {
           </div>
 
           <div className="form-group">
-            <label>Password</label>
+            <label>🔒 Password</label>
             <input
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
               required
-              placeholder="••••••••"
+              placeholder="Create a strong password"
             />
           </div>
 
           <div className="form-group">
-            <label>Confirm Password</label>
+            <label>✓ Confirm Password</label>
             <input
               type="password"
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
               required
-              placeholder="••••••••"
+              placeholder="Re-enter your password"
             />
           </div>
 
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Register'}
+          <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={loading}>
+            {loading ? '⏳ Creating Your Account...' : '🎉 Create Account'}
           </button>
         </form>
 
-        <p style={{ marginTop: '1rem', textAlign: 'center' }}>
-          Already have an account? <a href="/login" style={{ color: '#6f42c1', textDecoration: 'none' }}>Sign in</a>
-        </p>
+        <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'linear-gradient(135deg, rgba(210,105,30,0.05), rgba(244,164,96,0.05))', borderRadius: '12px', textAlign: 'center', border: '1px solid var(--border)' }}>
+          <p style={{ color: 'var(--text-light)', marginBottom: '0.5rem' }}>Already a member?</p>
+          <a href="/login" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: '700', fontSize: '1.05rem' }}>Sign In Here →</a>
+        </div>
       </div>
     </main>
   );
