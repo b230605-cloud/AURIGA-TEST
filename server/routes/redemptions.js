@@ -1,6 +1,8 @@
 import express from 'express';
 import Member from '../models/Member.js';
 import Redemption from '../models/Redemption.js';
+import PointLot from '../models/PointLot.js';
+import { runTransaction } from '../services/transaction.js';
 
 const router = express.Router();
 
@@ -25,38 +27,42 @@ router.post('/redeem', async (req, res) => {
       return res.status(400).json({ error: 'Invalid item' });
     }
 
-    const member = await Member.findById(memberId);
-    if (!member) {
-      return res.status(404).json({ error: 'Member not found' });
-    }
-
     const pointsNeeded = REDEMPTION_ITEMS[itemName];
-    if (member.pointsBalance < pointsNeeded) {
-      return res.status(400).json({
-        error: `Insufficient points. Need ${pointsNeeded}, have ${member.pointsBalance}`
-      });
-    }
-
-    member.pointsBalance -= pointsNeeded;
-    member.updatedAt = new Date();
-    await member.save();
-
-    const redemption = new Redemption({
-      memberId,
-      pointsRedeemed: pointsNeeded,
-      itemName
+    const redemptionTime = req.body.timestamp ? new Date(req.body.timestamp) : new Date();
+    if (Number.isNaN(redemptionTime.getTime())) return res.status(400).json({ error: 'timestamp must be a valid date' });
+    const result = await runTransaction(async (session) => {
+      const member = await Member.findById(memberId).session(session);
+      if (!member) throw Object.assign(new Error('Member not found'), { status: 404 });
+      if (member.pointsBalance < pointsNeeded) throw Object.assign(new Error(`Insufficient points. Need ${pointsNeeded}, have ${member.pointsBalance}`), { status: 400 });
+      let remaining = pointsNeeded;
+      const lots = await PointLot.find({ memberId, remainingPoints: { $gt: 0 }, expiresAt: { $gt: redemptionTime } }).sort({ earnedAt: 1, _id: 1 }).session(session);
+      for (const lot of lots) {
+        if (!remaining) break;
+        const consumed = Math.min(lot.remainingPoints, remaining);
+        lot.remainingPoints -= consumed;
+        remaining -= consumed;
+        await lot.save({ session });
+      }
+      // Members created before point lots existed still use the legacy scalar balance.
+      if (remaining > 0 && lots.length === 0 && member.pointsBalance >= pointsNeeded) remaining = 0;
+      if (remaining > 0) throw Object.assign(new Error('Insufficient unexpired points'), { status: 400 });
+      member.pointsBalance -= pointsNeeded;
+      member.updatedAt = redemptionTime;
+      await member.save({ session });
+      const redemption = new Redemption({ memberId, pointsRedeemed: pointsNeeded, itemName, timestamp: redemptionTime });
+      await redemption.save({ session });
+      return { member, redemption };
     });
-    await redemption.save();
 
     res.status(201).json({
       message: 'Redemption successful',
       itemName,
       pointsRedeemed: pointsNeeded,
-      newBalance: member.pointsBalance,
-      redemption
+      newBalance: result.member.pointsBalance,
+      redemption: result.redemption
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(error.status || 500).json({ error: error.message });
   }
 });
 

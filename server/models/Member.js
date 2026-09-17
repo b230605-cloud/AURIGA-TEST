@@ -7,7 +7,7 @@ const memberSchema = new mongoose.Schema({
   phoneNumber: { type: String, required: true, unique: true, index: true },
   password: { type: String, required: true },
   pointsBalance: { type: Number, default: 0 },
-  tier: { type: String, enum: ['Bronze', 'Silver', 'Gold'], default: 'Bronze' },
+  tier: { type: String, enum: ['Bronze', 'Silver', 'Gold', 'Platinum'], default: 'Bronze' },
   totalPointsEarned: { type: Number, default: 0 },
   totalMoneySpent: Number,
   createdAt: { type: Date, default: Date.now },
@@ -30,12 +30,12 @@ memberSchema.methods.comparePassword = async function(password) {
 };
 
 memberSchema.methods.getTierMultiplier = function() {
-  const multipliers = { Bronze: 1, Silver: 1.2, Gold: 1.5 };
+  const multipliers = { Bronze: 1, Silver: 1.2, Gold: 1.5, Platinum: 1.8 };
   return multipliers[this.tier];
 };
 
 memberSchema.methods.updateTier = function() {
-  if (this.totalPointsEarned >= 5000) this.tier = 'Gold';
+  if (this.totalPointsEarned >= 5000) this.tier = 'Platinum';
   else if (this.totalPointsEarned >= 2000) this.tier = 'Silver';
   else this.tier = 'Bronze';
 };

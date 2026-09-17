@@ -5,6 +5,9 @@ import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import CounterPanel from './pages/CounterPanel';
+import AdminDashboard from './pages/AdminDashboard';
+import ProfilePage from './pages/ProfilePage';
+import Navbar from './components/Navbar';
 import './App.css';
 
 export default function App() {
@@ -35,27 +38,7 @@ export default function App() {
   return (
     <Router>
       <div className="app">
-        <nav className="navbar">
-          <div className="nav-content">
-            <h1 className="logo">☕ Café Rewards</h1>
-            <div className="nav-links">
-              {!token ? (
-                <>
-                  <a href="/" className="nav-link">Home</a>
-                  <a href="/login" className="nav-link">Login</a>
-                  <a href="/register" className="nav-link">Register</a>
-                </>
-              ) : (
-                <>
-                  <a href="/dashboard" className="nav-link">Dashboard</a>
-                  <a href="/counter" className="nav-link">Counter</a>
-                  <span className="user-info">{user?.name} ({user?.tier})</span>
-                  <button onClick={handleLogout} className="nav-link logout">Logout</button>
-                </>
-              )}
-            </div>
-          </div>
-        </nav>
+        <Navbar token={token} user={user} onLogout={handleLogout} />
 
         <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -63,6 +46,8 @@ export default function App() {
           <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
           <Route path="/dashboard" element={token ? <Dashboard user={user} /> : <Navigate to="/login" />} />
           <Route path="/counter" element={token ? <CounterPanel user={user} /> : <Navigate to="/login" />} />
+          <Route path="/admin" element={token ? <AdminDashboard user={user} token={token} /> : <Navigate to="/login" />} />
+          <Route path="/profile" element={token ? <ProfilePage user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} />
         </Routes>
       </div>
     </Router>
