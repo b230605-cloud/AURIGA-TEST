@@ -12,10 +12,13 @@ export default function Dashboard({ user }) {
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (user?.id) {
+      fetchData();
+    }
+  }, [user]);
 
   const fetchData = async () => {
+    if (!user?.id) return;
     try {
       setLoading(true);
       const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -40,12 +43,12 @@ export default function Dashboard({ user }) {
     return colors[tier] || 'tier-bronze';
   };
 
-  if (loading) return <main><div className="loading">Loading...</div></main>;
+  if (loading || !memberData) return <main><div className="loading">Loading...</div></main>;
 
   return (
     <main>
       <div className="container">
-        <h1>Welcome, {memberData.name}! 👋</h1>
+        <h1>Welcome, {memberData?.name || 'Member'}! 👋</h1>
 
         <div className="stats-grid">
           <div className="card">
