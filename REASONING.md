@@ -1,19 +1,27 @@
-# Implementation reasoning
+# Implementation Reasoning
 
 ## Correctness first
 
-The balance is stored for fast reads, while each purchase also creates a point lot. A lot tracks the earned points, remaining points, earned time, and 90-day expiry. A redemption consumes the oldest unexpired lots first. This keeps the live balance and expiry behavior explainable.
+The system keeps a fast `pointsBalance` field and an auditable point-lot ledger. Each purchase creates a lot with earned time, remaining points, and a 90-day expiry. Redemptions consume the oldest unexpired lots first, while legacy members without lots can still use their existing scalar balance.
 
-Purchase, redemption, point-lot, and tier-notification writes are grouped in MongoDB transactions. If any write fails, the balance update is rolled back with its corresponding ledger record.
+Purchases and redemptions run in MongoDB transactions. A purchase atomically updates the member, purchase record, point lot, and any tier-upgrade notification. A redemption atomically updates the member, consumes lots, and writes the redemption record.
 
 ## Tier compatibility
 
-Bronze, Silver, and Gold earning behavior remains unchanged. Platinum is selected at 5,000 lifetime points and earns at a 1.8x multiplier. Gold remains accepted in the schema so existing Gold documents remain readable.
+Bronze, Silver, and Gold remain supported. Platinum is selected at 5,000 lifetime earned points and uses the current required `1.8x` multiplier. Purchase points are calculated as `floor(amount * 10 * multiplier)`.
 
-## Notification integration
+## Expiry and notifications
 
-A tier upgrade produces a `tier.upgraded` outbox event containing the member identity and both tier values. The outbox is exposed through `/outbox` and `/api/outbox`, which makes the event available to a separate notification worker.
+`POST /clock` accepts an optional `now` timestamp and expires all remaining lots whose expiry is reached. It writes expiry audit records and adjusts live balances. A tier transition creates a `tier.upgraded` notification event in the outbox, available through `/outbox` and `/api/outbox`.
 
-## Testing
+## Security and operations
 
-Automated tests cover tier boundaries, legacy rates, Platinum calculation, and integer rounding. Backend files are syntax-checked and the React client is built with Vite. Full purchase, redemption, expiry, and outbox integration testing requires a running MongoDB replica set or MongoDB Atlas connection.
+Private member, purchase, and redemption routes require JWT authentication. Authentication is rate-limited to 5 requests per 15 minutes, general API traffic to 100 requests per 15 minutes, and responses use compression. Environment secrets remain outside Git.
+
+## Validation
+
+- MongoDB integration flow passes for registration, login, purchase, Platinum calculation, redemption, tier notification, and expiry.
+- Deterministic reward tests cover tier thresholds, multipliers, and rounding.
+- Vite production build passes.
+- Live smoke flow verified registration, a ₹100 Bronze purchase producing 1,000 points, and a 150-point redemption.
+- Client runtime dependency audit reports zero vulnerabilities after the React Router upgrade.
