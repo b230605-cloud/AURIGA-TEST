@@ -1,11 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import connectDB from './config/db.js';
-import authRoutes from './routes/auth.js';
-import memberRoutes from './routes/members.js';
-import purchaseRoutes from './routes/purchases.js';
-import redemptionRoutes from './routes/redemptions.js';
+import connectDB from './server/config/db.js';
+import authRoutes from './server/routes/auth.js';
+import memberRoutes from './server/routes/members.js';
+import purchaseRoutes from './server/routes/purchases.js';
+import redemptionRoutes from './server/routes/redemptions.js';
 
 dotenv.config();
 const app = express();
